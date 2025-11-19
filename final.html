@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Merci</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+
+  <style>
+    body{
+      background:#f5f5f7;height:100vh;display:flex;justify-content:center;
+      align-items:center;font-family:system-ui;
+    }
+    .box{
+      background:white;padding:40px;border-radius:22px;width:90%;max-width:420px;
+      border:1px solid #ddd;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.1);
+    }
+    h1{font-size:1.8rem;margin-bottom:12px;}
+    p{color:#6b7280;margin-bottom:26px;}
+
+    .btn{
+      padding:14px 20px;width:100%;border-radius:999px;border:none;
+      background:linear-gradient(135deg,#2563eb,#22c55e);
+      color:white;font-size:1rem;font-weight:600;cursor:pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <h1>Merci !</h1>
+  <p>Le casier a bien été refermé.</p>
+  <button class="btn" onclick="location.href='lockers.html'">Retour au début</button>
+</div>
+
+<script>
+if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}
+</script>
+
+</body>
+</html>
