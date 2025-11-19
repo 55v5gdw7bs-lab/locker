@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lockers à trottinettes</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+    }
+    body{
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:#f5f5f7;
+      color:#111827;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+    header{
+      padding:18px 24px;
+      border-bottom:1px solid #e5e7eb;
+      background:#ffffffcc;
+      backdrop-filter:blur(12px);
+      position:sticky;
+      top:0;
+      z-index:20;
+    }
+    .header-inner{
+      max-width:1100px;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+    }
+    h1{font-size:24px;font-weight:700;}
+    .subtitle{font-size:13px;color:#6b7280;}
+    main{flex:1;padding:24px;}
+    .container{max-width:1100px;margin:auto;display:flex;flex-direction:column;gap:20px;}
+
+    .stepper{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;}
+    .step{display:flex;align-items:center;gap:6px;font-size:12px;padding:6px 12px;border-radius:999px;border:1px solid #e5e7eb;background:white;color:#6b7280;}
+    .step-number{width:18px;height:18px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:11px;background:#e5e7eb;}
+    .step.active{border-color:#2563eb;color:#2563eb;}
+    .step.active .step-number{background:#2563eb;color:#fff;}
+
+    .screen{display:none;animation:fade .2s ease;}
+    .screen.active{display:block;}
+
+    @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+    .layout{display:grid;grid-template-columns:300px 1fr;gap:20px;}
+    @media(max-width:840px){.layout{grid-template-columns:1fr;}}
+
+    .card{
+      background:white;border-radius:18px;padding:18px;
+      border:1px solid #e5e7eb;
+      box-shadow:0 8px 24px rgba(0,0,0,0.07);
+    }
+    .card-title{font-size:16px;font-weight:600;margin-bottom:6px;}
+    .card-subtitle{font-size:12px;color:#6b7280;margin-bottom:10px;}
+
+    select{
+      width:100%;padding:9px;border-radius:10px;border:1px solid #d1d5db;
+      background:#f9fafb;font-size:13px;
+    }
+
+    .btn{
+      padding:10px 16px;border-radius:999px;border:none;
+      background:linear-gradient(135deg,#2563eb,#22c55e);
+      color:white;font-size:13px;cursor:pointer;margin-top:10px;
+      box-shadow:0 10px 24px rgba(37,99,235,.25);
+    }
+
+    .btn-secondary{background:white;border:1px solid #ccc;color:#111;}
+
+    .trott-list{margin-top:8px;max-height:260px;overflow-y:auto;border-top:1px solid #e5e7eb;}
+    .trott-item{
+      padding:10px;border-radius:12px;background:#f9fafb;margin-bottom:8px;
+      border:1px solid transparent;cursor:pointer;display:flex;justify-content:space-between;
+    }
+    .trott-item:hover{border-color:#2563eb;background:#eef2ff;}
+    .battery-low{color:#ef4444;} .battery-medium{color:#eab308;} .battery-high{color:#16a34a;}
+
+    .code-box{
+      font-size:28px;text-align:center;margin-top:18px;padding:18px;border-radius:16px;
+      background:#ecfdf5;border:1px solid #22c55e;color:#15803d;
+      box-shadow:0 10px 24px rgba(16,185,129,0.2);
+    }
+
+    .history-card{
+      background:white;border-radius:18px;padding:16px;border:1px solid #e5e7eb;
+      box-shadow:0 4px 12px rgba(0,0,0,0.05);
+    }
+    .history-title{font-size:14px;font-weight:600;margin-bottom:6px;}
+    .history-item{
+      padding:8px;border-radius:10px;background:#f9fafb;margin-bottom:6px;border:1px solid #e5e7eb;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <h1>Lockers à trottinettes</h1>
+    <div class="subtitle">Choisis un emplacement, une trottinette, puis récupère ton code.</div>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+
+    <!-- Stepper -->
+    <div class="stepper">
+      <div class="step active" data-step="1"><div class="step-number">1</div>Locker & trottinette</div>
+      <div class="step" data-step="2"><div class="step-number">2</div>Confirmation</div>
+      <div class="step" data-step="3"><div class="step-number">3</div>Code</div>
+    </div>
+
+    <!-- ÉCRAN 1 -->
+    <div id="screen-home" class="screen active">
+      <div class="layout">
+
+        <div class="card">
+          <div class="card-title">1. Choisir un emplacement</div>
+          <div class="card-subtitle">Sélectionne le casier le plus proche.</div>
+
+          <label>Locker</label>
+          <select id="locker-select"></select>
+
+          <button class="btn" id="btn-trajet">📍 Voir trajet</button>
+        </div>
+
+        <div class="card">
+          <div id="locker-details"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ÉCRAN 2 -->
+    <div id="screen-confirm" class="screen">
+      <div class="card">
+        <div class="card-title">2. Confirmation</div>
+        <p id="confirm-text"></p>
+
+        <button class="btn" id="btn-validate">Valider</button>
+        <button class="btn btn-secondary" id="btn-back-home1">⬅ Retour</button>
+      </div>
+    </div>
+
+    <!-- ÉCRAN 3 -->
+    <div id="screen-code" class="screen">
+      <div class="card">
+        <div class="card-title">3. Code du casier</div>
+
+        <div id="code-box" class="code-box"></div>
+
+        <button class="btn" id="btn-go-locker">Ouvrir le digicode</button>
+        <button class="btn btn-secondary" id="btn-back-home2">⬅ Retour</button>
+      </div>
+    </div>
+
+    <!-- HISTORIQUE -->
+    <div class="history-card">
+      <div class="history-title">Historique</div>
+      <div id="history-list"></div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+/* ------------------------------ */
+/* LOCKERS DATA */
+/* ------------------------------ */
+const lockers=[
+  {
+    id_locker:1,
+    nom:"Locker – Gare SNCF",
+    position:{adresse:"Gare SNCF, 71200 Le Creusot",gps_lat:46.806,gps_lon:4.444},
+    places:[
+      {id_place:1,occupee:true,id_trottinette:"TROTT-G1",batterie:92},
+      {id_place:2,occupee:true,id_trottinette:"TROTT-G2",batterie:48},
+      {id_place:3,occupee:true,id_trottinette:"TROTT-G3",batterie:25},
+      {id_place:4,occupee:true,id_trottinette:"TROTT-G4",batterie:77},
+      {id_place:5,occupee:true,id_trottinette:"TROTT-G5",batterie:15}
+    ]
+  },
+  {
+    id_locker:2,
+    nom:"Locker – Centre-ville",
+    position:{adresse:"Place Centrale",gps_lat:46.807,gps_lon:4.431},
+    places:[
+      {id_place:1,occupee:true,id_trottinette:"TROTT-C1",batterie:39},
+      {id_place:2,occupee:true,id_trottinette:"TROTT-C2",batterie:81},
+      {id_place:3,occupee:true,id_trottinette:"TROTT-C3",batterie:54}
+    ]
+  }
+];
+
+let selectedLocker=null;
+let selectedTrott=null;
+let currentUnlockCode=null;
+
+function setStep(step){
+  document.querySelectorAll(".step").forEach(e=>{
+    e.classList.toggle("active",Number(e.dataset.step)===step);
+  });
+}
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+/* Init lockers */
+function initLockerSelect(){
+  const sel=document.getElementById("locker-select");
+  lockers.forEach(l=>{
+    let o=document.createElement("option");
+    o.value=l.id_locker;o.textContent=l.nom;
+    sel.appendChild(o);
+  });
+  sel.value=1;
+  selectedLocker=lockers[0];
+  renderLockerDetails();
+
+  sel.onchange=()=>{
+    selectedLocker=lockers.find(x=>x.id_locker==sel.value);
+    renderLockerDetails();
+  };
+}
+
+function renderLockerDetails(){
+  const div=document.getElementById("locker-details");
+  div.innerHTML="";
+
+  const places=selectedLocker.places.filter(p=>p.occupee);
+
+  places.forEach(p=>{
+    let item=document.createElement("div");
+    item.className="trott-item";
+    item.innerHTML=`
+      <div>
+        <strong>${p.id_trottinette}</strong><br>
+        <small>${p.batterie}% batterie</small>
+      </div>
+    `;
+    item.onclick=()=>{selectedTrott=p;goToConfirm();};
+    div.appendChild(item);
+  });
+}
+
+function goToConfirm(){
+  document.getElementById("confirm-text").innerHTML=
+    `Tu as choisi <b>${selectedTrott.id_trottinette}</b> (${selectedTrott.batterie}%).`;
+  showScreen("screen-confirm");setStep(2);
+}
+function generateCode(){return Math.floor(1000+Math.random()*9000);}
+document.getElementById("btn-validate").onclick=()=>{
+  currentUnlockCode=generateCode();
+  document.getElementById("code-box").textContent=currentUnlockCode;
+  showScreen("screen-code");setStep(3);
+};
+
+document.getElementById("btn-back-home1").onclick=()=>{showScreen("screen-home");setStep(1);}
+document.getElementById("btn-back-home2").onclick=()=>{showScreen("screen-home");setStep(1);}
+
+/* OPEN DIGICODE */
+document.getElementById("btn-go-locker").onclick=()=>{
+  const url=new URL("casier.html",window.location.href);
+  url.searchParams.set("code",currentUnlockCode);
+  url.searchParams.set("locker",selectedLocker.nom);
+  url.searchParams.set("trott",selectedTrott.id_trottinette);
+  window.location.href=url.toString();
+};
+
+/* HISTORIQUE */
+function renderHistory(){
+  const list=document.getElementById("history-list");
+  list.innerHTML="";
+  const hist=JSON.parse(localStorage.getItem("lockerHistory")||"[]").reverse();
+  if(hist.length===0){
+    list.innerHTML="<i>Aucun usage enregistré.</i>";
+    return;
+  }
+  hist.forEach(h=>{
+    let div=document.createElement("div");
+    div.className="history-item";
+    div.innerHTML=`<b>${h.locker}</b> – ${h.trott}<br>
+    <small>${h.date} · Code ${h.code}</small>`;
+    list.appendChild(div);
+  });
+}
+
+initLockerSelect();
+renderHistory();
+
+/* PWA */
+if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}
+</script>
+
+</body>
+</html>
